@@ -1,10 +1,18 @@
 import os
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 
 # Carrega as credenciais do arquivo .env
 load_dotenv()
+
+
+def get_engine():
+    """ Auxiliar para gerenciar a conexão com o banco utilizando a URL do .env """
+    db_url = os.getenv('SUPABASE_URL')
+    if not db_url:
+        raise ValueError("⚠️ A variável SUPABASE_URL não foi encontrada no arquivo .env")
+    return create_engine(db_url)
 
 
 def salvar_no_supabase(df_novo, tabela_alvo):
@@ -14,16 +22,8 @@ def salvar_no_supabase(df_novo, tabela_alvo):
     A função compara o que está sendo enviado com o que já existe no banco
     através de uma chave composta (link + preço), garantindo que apenas
     novos produtos ou alterações de preços sejam registrados.
-
-    Args:
-        df_novo (pd.DataFrame): DataFrame com os dados raspados.
-        tabela_alvo (str): Nome da tabela no banco (ex: 'stg_kabum_gpus').
-
-    Returns:
-        str: Mensagem de status da operação.
     """
-    db_url = os.getenv('SUPABASE_URL')
-    db_engine = create_engine(db_url)
+    db_engine = get_engine()
 
     if df_novo.empty:
         return "⚠️ DataFrame vazio. Operação abortada."
@@ -53,3 +53,36 @@ def salvar_no_supabase(df_novo, tabela_alvo):
             return f"✅ Sucesso: {len(df_final)} novos registros inseridos."
 
         return "😴 Sincronização ok: Nenhum novo preço detectado."
+
+
+def buscar_produtos_sem_referencia():
+    engine = get_engine()
+    # Esta query agora é mais rigorosa: busca vazios E incompletos
+    query = """
+            SELECT DISTINCT s.nome_produto
+            FROM stg_kabum_cpus s
+                     LEFT JOIN vw_silver_cpus v ON s.id = v.id
+            WHERE v.modelo_referencia IS NULL; \
+            """
+
+    with engine.connect() as conn:
+        df = pd.read_sql(query, con=conn)
+        return df['nome_produto'].tolist()
+
+
+def salvar_referencia_ia(dados_ia):
+    engine = get_engine()
+    df_ref = pd.DataFrame([dados_ia])
+
+    with engine.connect() as conn:
+        try:
+            # Usamos o 'upsert' (no SQLAlchemy para PostgreSQL/Supabase)
+            # Para simplificar, vamos deletar o modelo antigo e inserir o novo e completo
+            modelo = dados_ia['modelo_referencia']
+            conn.execute(text(f"DELETE FROM dim_cpu_reference WHERE modelo_referencia = '{modelo}'"))
+
+            df_ref.to_sql('dim_cpu_reference', con=conn, if_exists='append', index=False)
+            conn.commit()
+            print(f"✅ Dados atualizados/completos: {modelo}")
+        except Exception as e:
+            print(f"ℹ️ Erro ao atualizar {dados_ia['modelo_referencia']}: {e}")
