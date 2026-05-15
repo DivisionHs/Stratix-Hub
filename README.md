@@ -1,57 +1,62 @@
 # Stratix Hub | Data Intelligence Ecosystem
 
-O **Stratix Hub** é um ecossistema de análise de dados *end-to-end* projetado para transformar dados brutos em inteligência estratégica. A ideia nasceu da necessidade de centralizar e padronizar informações de setores distintos — Varejo, Logística e Finanças — permitindo uma visão clara e acionável para a tomada de decisão.
+O **Stratix Hub** é um ecossistema de análise de dados *end-to-end* projetado para transformar dados brutos em inteligência estratégica. O projeto centraliza e padroniza informações de setores distintos — Varejo, Logística e Finanças — utilizando automação de ponta e inteligência artificial para garantir a integridade da tomada de decisão.
 
 ---
 
-## 💡 A Origem e o Propósito
+## 💡 Propósito e Visão
 
-O projeto surgiu ao observar a fragmentação de dados em e-commerces e cadeias de suprimentos. Muitas vezes, as informações estão disponíveis, mas "sujas", desestruturadas e espalhadas entre diferentes plataformas. 
+O projeto resolve a fragmentação e a baixa qualidade de dados comuns em e-commerces e cadeias de suprimentos. O **Stratix Hub** atua na desestruturação de dados "sujos" através de três pilares:
 
-O **Stratix Hub** resolve essa dor através de três pilares:
-1. **Automação:** Eliminação da coleta manual, garantindo dados sempre atualizados.
-2. **Padronização:** Aplicação de regras de negócio via SQL para normalizar marcas e categorias.
-3. **Acessibilidade:** Entrega de dashboards intuitivos que respondem perguntas de negócio em segundos.
+1. **Automação Resiliente:** Ingestão contínua com tratamento de falhas e limites de API.
+2. **Enriquecimento Semântico:** Uso de LLMs (Large Language Models) para traduzir ruído em informação técnica padronizada.
+3. **Modelagem Eficiente:** Estrutura de dados em camadas (Medallion Architecture) para performance e clareza.
 
 ---
 
-## 🏗️ Arquitetura Geral da Solução
+## 🏗️ Arquitetura da Solução
 
-O hub utiliza uma *stack* moderna e escalável, integrando as melhores ferramentas de engenharia e visualização:
+O hub utiliza uma *stack* moderna e escalável, integrando ferramentas líderes em engenharia e visualização:
 
-* **Ingestão:** Scripts em **Python** (Selenium) para automação de *web scraping* em tempo real.
-* **Armazenamento:** Banco de Dados **PostgreSQL** hospedado na nuvem via **Supabase**.
-* **Transformação:** Camada de modelagem (Bronze/Silver/Gold) construída com **Views SQL** para limpeza e tratamento.
-* **Visualização:** **Power BI** para *storytelling* e exploração analítica.
+* **Ingestão:** Scripts em **Python** (Selenium/Requests) com lógica de *retry* e *batch processing*.
+* **Inteligência:** Integração com **Google Gemini API** para normalização de dados não estruturados.
+* **Armazenamento:** Banco de Dados **PostgreSQL** (Supabase) com alta disponibilidade.
+* **Transformação:** Camada de modelagem (Bronze/Silver/Gold) via **Views SQL** e **Regex**.
+* **Visualização:** Dashboards dinâmicos focados em *storytelling* e métricas acionáveis.
+
+---
+
+## 🚀 Diferenciais Técnicos do Ecossistema
+
+Este projeto não apenas coleta dados, ele garante a **Qualidade do Dado (Data Quality)** através de:
+* **Normalização Híbrida:** Combinação de Expressões Regulares (Regex) e IA para garantir 100% de match em Joins complexos.
+* **Idempotência:** Scripts projetados para serem executados múltiplas vezes sem gerar duplicatas ou inconsistências (lógica de Upsert).
+* **Escalabilidade:** Processamento em lotes (*batch*) para otimização de custos e performance de API.
 
 ---
 
 ## 📂 Verticais do Hub
 
-Abaixo estão os módulos que compõem o ecossistema. Cada um possui seu próprio ciclo de vida e documentação específica.
-
-### 🔵 01. Tech Retail Insights (MVP Ativo)
-Focado no mercado de hardware e eletrônicos, este módulo monitora preços e disponibilidade de componentes de alta performance.
-* **Objetivo:** Identificar janelas de oportunidade de compra e analisar o *market share* de fabricantes.
-* **Diferencial:** Lógica de classificação avançada que separa fabricantes de "chips" de montadoras finais.
-* **Status:** ⏳ **Em desenvolvimento** (Fase de Modelagem de Dados)
+### 🔵 01. Tech Retail Insights (Ativo 🚀)
+Módulo de monitoramento do mercado de hardware de alta performance.
+* **Core:** Web scraping, de-para semântico e análise de volatilidade de preços.
+* **Status:** ✅ Produção / Refinamento de Dados.
 
 ### 🟡 02. Logistics Analytics
-* **Foco:** Monitoramento de fluxos de entrega, cumprimento de SLAs e otimização de custos de frete.
-* **Status:** ⏳ **Backlog** (Fase de Planejamento)
+* **Foco:** Monitoramento de SLAs, fluxos de entrega e otimização de frete.
+* **Status:** ⏳ Planejamento.
 
 ### 🟢 03. Financial Control
-* **Foco:** Análise de margem de contribuição, fluxo de caixa e projeções financeiras.
-* **Status:** ⏳ **Backlog** (Fase de Planejamento)
+* **Foco:** Análise de margem, fluxo de caixa e projeções.
+* **Status:** ⏳ Backlog.
 
 ---
 
 ## 🛠️ Como navegar neste repositório
 
-Cada pasta de projeto possui sua própria documentação detalhada e instruções de execução:
-1.  Acesse a pasta do projeto desejado (ex: `/01-tech-retail`).
-2.  Consulte o **README interno** para entender as particularidades técnicas, requisitos e como reproduzir o ambiente.
-
+Cada projeto possui sua própria documentação detalhada:
+1.  Acesse a pasta do projeto (ex: `/01-tech-retail`).
+2.  Consulte o **README interno** para detalhes sobre a lógica de enriquecimento, esquemas de banco de dados e visualizações.
 ---
 
 ## 👨‍💻 Sobre o Autor

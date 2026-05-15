@@ -1,66 +1,52 @@
 # 🔵 Tech Retail Insights | Stratix Hub
 
-Este módulo é focado na extração, tratamento e análise de dados do mercado de hardware e eletrônicos. O objetivo principal é monitorar a flutuação de preços e a disponibilidade de componentes de alta performance (CPUs, GPUs, RAM e SSDs) no varejo brasileiro.
+Este módulo é o motor de inteligência de mercado do Stratix Hub, focado na extração e normalização de dados do varejo de hardware de alta performance. O foco atual é a análise de CPUs, transformando descrições caóticas de e-commerce em especificações técnicas precisas.
 
 ---
 
-## 🎯 Objetivo do Projeto
+## 🎯 Desafios Técnicos & Soluções
 
-Transformar dados não estruturados provenientes de e-commerces em um dashboard analítico capaz de:
-* Identificar o **Market Share** visual de fabricantes por categoria.
-* Calcular o **Desconto Real** (diferença entre preço parcelado e à vista).
-* Monitorar o **Ticket Médio** de cada categoria de produto em tempo real.
+O maior desafio deste projeto não foi coletar os dados, mas sim **garantir a integridade do cruzamento de informações (Join Integrity)**. 
 
----
+### 1. Inteligência Semântica com LLM (Gemini API)
+Diferente de scrapers comuns, este módulo utiliza IA para traduzir codinomes comerciais em modelos técnicos:
+* **Entrada:** `"Processador Intel Core I3 21xx, LGA 1155 - Oem"`
+* **Processamento:** A IA identifica a família e traduz para **`Intel Core i3 2100`**.
+* **Saída:** Dados estruturados de soquete (LGA 1155), núcleos (2) e clock base.
 
-## 📂 Estrutura de Pastas
-
-* **`/src`**: Contém o motor de ingestão em Python.
-    * `main.py`: Script principal de execução do scraping.
-    * `database.py`: Módulo de conexão e persistência de dados no PostgreSQL/Supabase.
-    * `utils.py`: Funções auxiliares de limpeza de dados e configuração do driver Selenium.
-* **`/sql`**: Scripts SQL de DDL (Data Definition Language) e criação de Views analíticas.
-* **`/dashboards`**: Arquivo `.pbix` com a camada de visualização final.
+### 2. Match de Alta Precisão (Regex & Word Boundaries)
+Para evitar "falsos positivos" (como confundir um `i5 14400` com um `i5 14400F`), implementamos uma lógica de comparação em nível de banco de dados (SQL):
+* **Normalização Híbrida:** Remoção dinâmica de hífens e espaços apenas no momento do cruzamento.
+* **Regex Boundaries (`\y`):** Garantia de que o modelo seja uma "palavra inteira", impedindo que um modelo menor dê match em uma variante mais robusta por acidente.
 
 ---
 
-## 🛠️ Tecnologias e Ferramentas
+## ⚙️ Arquitetura de Dados (Pipeline)
 
-* **Linguagem:** Python 3.x
-* **Automação:** Selenium WebDriver
-* **Banco de Dados:** PostgreSQL (Supabase Cloud)
-* **Modelagem de Dados:** SQL (Views para Camada Silver)
-* **BI:** Power BI
+O projeto segue o fluxo de processamento de dados moderno:
 
----
-
-## ⚙️ Regras de Negócio e Tratamento (Camada Silver)
-
-Um dos maiores desafios técnicos deste módulo foi a **normalização dos fabricantes**. Como os títulos dos produtos no varejo são inconsistentes, foi implementada uma lógica de `CASE WHEN` em SQL para:
-1. **Priorização de Marcas:** Identificar marcas de módulos (ex: Kingston, Corsair, Rise Mode).
-2. **Blindagem de Chipsets:** Garantir que termos como "NVIDIA" ou "AMD" só sejam atribuídos como fabricantes em categorias de GPU ou CPU, evitando falsos positivos em memórias RAM "compatíveis com NVIDIA".
+1.  **Bronze (Staging):** Dados brutos extraídos via Selenium da Kabum, preservando a string original do anúncio.
+2.  **Silver (Enriched):** Processamento via script de enriquecimento que consulta a API do Gemini em lotes (*batch*) de 10 itens.
+3.  **Gold (Analytical):** View final que consolida preços, links e especificações técnicas limpas, pronta para consumo no Power BI.
 
 ---
 
-## 🚀 Como Executar
+## 🛠️ Stack Tecnológica
 
-1. **Pré-requisitos:**
-   * Python instalado.
-   * WebDriver compatível com seu navegador (ex: ChromeDriver).
-
-2. **Configuração:**
-   * Renomeie o arquivo `.env.example` para `.env`.
-   * Preencha suas credenciais de acesso ao banco de dados PostgreSQL.
-
-   3. **Execução:**
-      ```bash
-      pip install -r requirements.txt
-      python src/main.py
+* **Ingestão:** Python (Selenium) + Lógica de Retry (Exponencial Backoff).
+* **IA:** Google Gemini 3.1 Flash Lite (Normalização de Nomenclatura).
+* **Banco de Dados:** PostgreSQL (Supabase) com uso intensivo de **Regular Expressions** e **Views**.
+* **BI:** Power BI para visualização de Market Share e Performance/Preço.
 
 ---
 
-# 📊 Visualização
+## 🚀 Como Executar o Enriquecimento
 
-O dashboard final consome as **Views SQL** criadas no Supabase, garantindo que o Power BI receba dados já limpos e pré-processados, otimizando a performance do relatório.
+O script de enriquecimento (`enrichment.py`) é resiliente a falhas de rede e limites de cota:
+1.  O script identifica automaticamente produtos sem referência técnica no banco.
+2.  Processa os dados em lotes para otimizar o uso da API.
+3.  Em caso de erro de servidor (503), aplica uma lógica de 3 tentativas antes de pular para o próximo lote, garantindo que nenhum dado seja perdido.
 
----
+```bash
+# Executar o enriquecimento de dados
+python src/enrichment.py
